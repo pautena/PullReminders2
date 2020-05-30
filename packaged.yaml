@@ -1,0 +1,125 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: 'pullreminders2
+
+  Sample SAM Template for pullreminders2
+
+  '
+Globals:
+  Function:
+    Timeout: 3
+Resources:
+  HelloWorldFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: s3://pullreminders2/74cfe71174146eae3859ad299165be6e
+      Handler: handlers.hello_world.lambda_handler
+      Runtime: python3.7
+      Events:
+        HelloWorld:
+          Type: Api
+          Properties:
+            Path: /hello
+            Method: get
+  CommandsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: s3://pullreminders2/501b67719387e1ef28e48fbd0f5a0d0d
+      Handler: handlers.commands.lambda_handler
+      Runtime: python3.7
+      Events:
+        HelloWorld:
+          Type: Api
+          Properties:
+            Path: /commands
+            Method: post
+  OauthCallbackFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: s3://pullreminders2/56d9e32daa4fd8e32b87fb9a318a23fe
+      Handler: handlers.oauth_callback.lambda_handler
+      Runtime: python3.7
+      Events:
+        HelloWorld:
+          Type: Api
+          Properties:
+            Path: /oauth/callback
+            Method: get
+  GithubWebhookFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: s3://pullreminders2/36d0eaa0d19e00262b0bff3c4b6c6df7
+      Handler: handlers.github_webhook.lambda_handler
+      Runtime: python3.7
+      Events:
+        HelloWorld:
+          Type: Api
+          Properties:
+            Path: /webhooks/github
+            Method: post
+Outputs:
+  HelloWorldApi:
+    Description: API Gateway endpoint URL for Prod stage for Hello World function
+    Value:
+      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/
+  HelloWorldFunction:
+    Description: Hello World Lambda Function ARN
+    Value:
+      Fn::GetAtt:
+      - HelloWorldFunction
+      - Arn
+  HelloWorldFunctionIamRole:
+    Description: Implicit IAM Role created for Hello World function
+    Value:
+      Fn::GetAtt:
+      - HelloWorldFunctionRole
+      - Arn
+  CommandsApi:
+    Description: API Gateway endpoint URL for Prod stage for commands function
+    Value:
+      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/commands/
+  CommandsFunction:
+    Description: Hello World commands ARN
+    Value:
+      Fn::GetAtt:
+      - CommandsFunction
+      - Arn
+  CommandsFunctionIamRole:
+    Description: Implicit IAM Role created for commands function
+    Value:
+      Fn::GetAtt:
+      - CommandsFunctionRole
+      - Arn
+  OauthCallbackApi:
+    Description: API Gateway endpoint URL for Prod stage for oauth callback function
+    Value:
+      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/oauth/callback
+  OauthCallbackFunction:
+    Description: Hello World commands ARN
+    Value:
+      Fn::GetAtt:
+      - OauthCallbackFunction
+      - Arn
+  OauthCallbackFunctionIamRole:
+    Description: Implicit IAM Role created for commands function
+    Value:
+      Fn::GetAtt:
+      - OauthCallbackFunctionRole
+      - Arn
+  GithubWebhookApi:
+    Description: API Gateway endpoint URL for Prod stage for pull requests webhooks
+      function
+    Value:
+      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/webhooks/github
+  GithubWebhookFunction:
+    Description: Hello World commands ARN
+    Value:
+      Fn::GetAtt:
+      - GithubWebhookFunction
+      - Arn
+  GithubWebhookFunctionIamRole:
+    Description: Implicit IAM Role created for commands function
+    Value:
+      Fn::GetAtt:
+      - GithubWebhookFunctionRole
+      - Arn
