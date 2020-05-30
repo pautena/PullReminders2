@@ -89,7 +89,7 @@ class ReviewRequested(BaseAction,PullRequestable):
             update_message(message,review_request_message['ts'],review_request_message['channel'])
         
 
-class AprovedSubmitReview(BaseAction,PullRequestable):
+class ApprovedSubmitReview(BaseAction,PullRequestable):
 
     def get_user(self):
         return self.action['review']['user']
@@ -107,9 +107,29 @@ class AprovedSubmitReview(BaseAction,PullRequestable):
             review_request_message['channel']
         )
 
+class RemoveApprovalSubmitReview(BaseAction,PullRequestable):
+
+    def get_user(self):
+        return self.action['review']['user']
+
+    def __call__(self):
+        print("RemoveApprovalSubmitReview")
+        pull_request= self.get_pull_request()
+        user = self.get_user()
+        review_request_message = get_review_request_message(user['id'],pull_request['id'])
+        print("review_request_message: ",review_request_message)
+
+        update_message(
+            review_request_message["message"],
+            review_request_message['ts'],
+            review_request_message['channel']
+        )
+
 class SubmitReview(BaseAction):
     REVIEW_TYPE = {
-        'approved':AprovedSubmitReview
+        'approved':ApprovedSubmitReview,
+        'changes_requested':RemoveApprovalSubmitReview,
+        'commented':RemoveApprovalSubmitReview
     }
 
     def get_type(self):

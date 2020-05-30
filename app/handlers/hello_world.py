@@ -1,6 +1,8 @@
 import json
 
-# import requests
+
+import sentry
+sentry.initialize()
 
 
 def lambda_handler(event, context):

@@ -1,8 +1,8 @@
 import json
 from commands import parse_command_body,run_command
 
-# import requests
-
+import sentry
+sentry.initialize()
 
 def lambda_handler(event, context):
     command = parse_command_body(event["body"])

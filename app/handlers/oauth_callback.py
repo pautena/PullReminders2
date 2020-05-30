@@ -4,7 +4,9 @@ from github_api import get_access_token,get_authenticated_profile
 from commands import parse_command_body
 from repository import login_profile
 from slack import send_response_via_hook
-# import requests
+
+import sentry
+sentry.initialize()
 
 
 def lambda_handler(event, context):

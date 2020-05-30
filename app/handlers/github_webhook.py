@@ -1,6 +1,8 @@
 import json
 from hooks import run_hook_action
-# import requests
+
+import sentry
+sentry.initialize()
 
 
 def lambda_handler(event, context):

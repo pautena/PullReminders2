@@ -3,3 +3,4 @@ aws-sam-cli
 pylint
 pymongo
 python-dotenv
+sentry-sdk
