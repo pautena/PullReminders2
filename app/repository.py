@@ -11,6 +11,7 @@ GLOBAL
 OAUTH_COLLECTION="oauth"
 USERS_COLLECTION="users"
 REVIEW_REQUESTS_COLLECTION="reviewRequests"
+COMMENT_COLLECTION="comments"
 
 
 def _get_db_client():
@@ -89,7 +90,7 @@ def _get_review_requests_collection():
 
 
 def _get_review_request_message_id(user_id,pull_request_id):
-    return f'{user_id}-{pull_request_id}'
+    return f'{pull_request_id}:{user_id}'
 
 def save_review_request_message(message,ts,channel,user_id,pull_request_id):
     collection = _get_review_requests_collection()
@@ -108,3 +109,32 @@ def save_review_request_message(message,ts,channel,user_id,pull_request_id):
 def get_review_request_message(user_id,pull_request_id):
     item_id = _get_review_request_message_id(user_id,pull_request_id)
     return _get_review_requests_collection().find_one({'_id' : item_id})
+
+
+"""
+MESSAGES
+"""
+def _get_comment_collection():
+    return _get_db_client()[COMMENT_COLLECTION]
+
+def _get_comment_id(id,pull_request_id):
+    return f'{pull_request_id}:{id}'
+
+def save_comment(comment_id,body,user_id,user_name,pull_request_id):
+    collection = _get_comment_collection()
+
+    item_id = _get_comment_id(comment_id,pull_request_id)
+    item = {
+        '_id':item_id,
+        'comment_id':comment_id,
+        'body':body,
+        'user_id':user_id,
+        'user_name':user_name,
+        'pull_request':pull_request_id
+    }
+    result = collection.replace_one({'_id': item_id}, item, upsert=True)
+    print("save_comment -> result: ",result)
+
+def get_comment_by_id(comment_id,pull_request_id):
+    item_id = _get_comment_id(pull_request_id,comment_id)
+    return _get_comment_collection().find_one({'_id' : item_id})

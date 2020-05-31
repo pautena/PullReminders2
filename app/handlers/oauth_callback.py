@@ -10,7 +10,6 @@ sentry.initialize()
 
 
 def lambda_handler(event, context):
-    print(f'event: {event}')
 
     code = event["queryStringParameters"]["code"]
     state = event["queryStringParameters"]["state"]

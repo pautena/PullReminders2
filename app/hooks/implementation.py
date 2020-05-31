@@ -1,5 +1,5 @@
 
-from repository import get_profile_by_id,save_review_request_message,get_review_request_message
+from repository import get_profile_by_id,save_review_request_message,get_review_request_message,save_comment,get_comment_by_id
 from slack import send_message,update_message
 
 class BaseAction:
@@ -15,8 +15,8 @@ class BaseAction:
     def __call__(self):
         pass
 
-    def send_message(self,message,user_id):
-        return send_message(message,user_id)
+    def send_message(self,message,user_id,attachments):
+        return send_message(message,user_id,attachments=attachments)
 
 class NotFound(BaseAction):
     def __call__(self):
@@ -36,7 +36,7 @@ class PullRequestable:
 
         }
 
-class ReviewRequested(BaseAction,PullRequestable):
+class ReviewRequestedAction(BaseAction,PullRequestable):
 
     def requested_by(self):
         pr_user = self.action["pull_request"]["user"]
@@ -89,7 +89,7 @@ class ReviewRequested(BaseAction,PullRequestable):
             update_message(message,review_request_message['ts'],review_request_message['channel'])
         
 
-class ApprovedSubmitReview(BaseAction,PullRequestable):
+class ApprovedSubmitReviewAction(BaseAction,PullRequestable):
 
     def get_user(self):
         return self.action['review']['user']
@@ -107,7 +107,7 @@ class ApprovedSubmitReview(BaseAction,PullRequestable):
             review_request_message['channel']
         )
 
-class RemoveApprovalSubmitReview(BaseAction,PullRequestable):
+class RemoveApprovalSubmitReviewAction(BaseAction,PullRequestable):
 
     def get_user(self):
         return self.action['review']['user']
@@ -117,19 +117,28 @@ class RemoveApprovalSubmitReview(BaseAction,PullRequestable):
         pull_request= self.get_pull_request()
         user = self.get_user()
         review_request_message = get_review_request_message(user['id'],pull_request['id'])
+
         print("review_request_message: ",review_request_message)
 
-        update_message(
-            review_request_message["message"],
-            review_request_message['ts'],
-            review_request_message['channel']
-        )
+        if review_request_message:
+            update_message(
+                review_request_message["message"],
+                review_request_message['ts'],
+                review_request_message['channel']
+            )
 
-class SubmitReview(BaseAction):
+
+class ChangesRequestedSubmitReviewAction(RemoveApprovalSubmitReviewAction):
+    pass
+
+class CommentedSubmitReviewAction(BaseAction):
+    pass
+
+class SubmitReviewAction(BaseAction):
     REVIEW_TYPE = {
-        'approved':ApprovedSubmitReview,
-        'changes_requested':RemoveApprovalSubmitReview,
-        'commented':RemoveApprovalSubmitReview
+        'approved':ApprovedSubmitReviewAction,
+        'changes_requested':ChangesRequestedSubmitReviewAction,
+        'commented':CommentedSubmitReviewAction
     }
 
     def get_type(self):
@@ -142,9 +151,76 @@ class SubmitReview(BaseAction):
             return self.REVIEW_TYPE[review_type](self.action)()
         return None
 
+
+class CreatedAction(BaseAction):
+    def __call__(self):
+        print("CreatedAction")
+
+        if 'comment' in self.action:
+            self._process_comment()
+            self._process_repply()
+        
+    
+    def _process_comment(self):
+        comment = self.action["comment"]
+
+        save_comment(
+            comment["id"],
+            comment["body"],
+            comment["user"]["id"],
+            comment["user"]["login"],
+            self.action["pull_request"]["id"],
+        )
+
+        #TODO: If not repply, send message to pr creator
+    
+    def _process_repply(self):
+
+        if not 'in_reply_to_id' in self.action["comment"]:
+            return
+            
+        pull_request  = self.action["pull_request"]
+        replied_comment = get_comment_by_id(
+            pull_request["id"],
+            self.action["comment"]['in_reply_to_id']
+        )
+
+        if not replied_comment:
+            return
+
+        replied_profile = get_profile_by_id(replied_comment['user_id'])
+        sender_profile = get_profile_by_id(self.action["comment"]["user"]['id'])
+
+
+        replied_name = f'@{replied_profile["slack"]["user_name"]}'
+        sender_name = self.action["comment"]["user"]['login']
+        if sender_profile:
+            sender_name = f'@{sender_profile["slack"]["user_name"]}'
+
+        if not replied_profile:
+            return
+        
+        if sender_profile is not None and replied_profile["slack"]["user_name"] == sender_profile["slack"]["user_name"]:
+            return
+
+        repository = self.action["repository"]
+        attachments = [{
+            "color": "#FF0000",
+            "text": f"{replied_name}: {replied_comment['body']}",
+        },{
+            "color": "#00FF00",
+            "text": f"{sender_name}: {self.action['comment']['body']}",
+        }]
+
+        message = f'{sender_name} repplied to you in [{repository["name"]}#{pull_request["number"]}] ' + \
+            f'<{pull_request["url"]}|{pull_request["title"]}>'
+        self.send_message(message,replied_profile['slack']['user_id'],attachments)
+
+
 ACTIONS = {
-    'review_requested':ReviewRequested,
-    'submitted':SubmitReview
+    'review_requested':ReviewRequestedAction,
+    'submitted':SubmitReviewAction,
+    'created':CreatedAction
 }
 
 def get_action(action):

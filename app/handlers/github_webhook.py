@@ -6,6 +6,7 @@ sentry.initialize()
 
 
 def lambda_handler(event, context):
+    print(f'event: {event["body"]}')
     body = json.loads(event["body"])
 
     if body['action']:

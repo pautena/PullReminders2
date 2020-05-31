@@ -18,19 +18,23 @@ def send_response_via_hook(message,hook_url):
         return r.text
     return None
 
-def send_message(message,user_id):
+def send_message(message,user_id,attachments=[]):
     print(f"send_message -> message: {message}, user_id: {user_id}")
 
     headers = {
-        'Authorization':f'Bearer {settings.SLACK_BOT_ACCESS_TOKEN}'
+        'Authorization':f'Bearer {settings.SLACK_BOT_ACCESS_TOKEN}',
+        "Content-Type":"application/json"
     }
     body = {
         'channel':user_id,
         'text':message,
         "unfurl_links": False,
-        "unfurl_media": False
+        "unfurl_media": False,
+        "attachments": attachments
     }
-    r = requests.post('https://slack.com/api/chat.postMessage',body,headers=headers)
+    print("body: ",body)
+
+    r = requests.post('https://slack.com/api/chat.postMessage',json.dumps(body),headers=headers)
     print(f"send_message -> status_code: {r.status_code}, text: {r.text}")
     if r.status_code == 200:
         return r.json()
@@ -40,7 +44,8 @@ def update_message(message,ts,user_id):
     print(f"update_message -> message: {message}, ts: {ts}")
 
     headers = {
-        'Authorization':f'Bearer {settings.SLACK_BOT_ACCESS_TOKEN}'
+        'Authorization':f'Bearer {settings.SLACK_BOT_ACCESS_TOKEN}',
+        "Content-Type":"application/json"
     }
     body = {
         'channel':user_id,
@@ -49,7 +54,7 @@ def update_message(message,ts,user_id):
         "unfurl_links": False,
         "unfurl_media": False
     }
-    r = requests.post('	https://slack.com/api/chat.update',body,headers=headers)
+    r = requests.post('	https://slack.com/api/chat.update',json.dumps(body),headers=headers)
     print(f"update_message -> status_code: {r.status_code}, text: {r.text}")
     if r.status_code == 200:
         return r.json()

@@ -22,14 +22,13 @@ def get_access_token(code,state):
         return r.text
     return None
 
-def get_authenticated_profile(auth_token):
+def get_authenticated_profile(auth_token,owner,repo,comment_id):
     headers =  {
         "Authorization":f"token {auth_token}"
     }
-    r = requests.get("https://api.github.com/user",headers=headers)
+    r = requests.get("https://api.github.com/repos/{owner}/{repo}/comments/{comment_id}",headers=headers)
     print(f"get_authenticated_profile -> code: {r.status_code}")
 
     if r.status_code == 200:
         return r.json()
     return None
-
