@@ -15,7 +15,7 @@ class BaseAction:
     def __call__(self):
         pass
 
-    def send_message(self,message,user_id,attachments):
+    def send_message(self,message,user_id,attachments=[]):
         return send_message(message,user_id,attachments=attachments)
 
 class NotFound(BaseAction):

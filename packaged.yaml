@@ -12,7 +12,7 @@ Resources:
   HelloWorldFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: s3://pullreminders2/451c76c95baf895b750ba94e1e3dd6ab
+      CodeUri: s3://pullreminders2/91159c8427fd95ca4cd16511007f5da2
       Handler: handlers.hello_world.lambda_handler
       Runtime: python3.7
       Events:
@@ -24,7 +24,7 @@ Resources:
   CommandsFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: s3://pullreminders2/6d6661dd3ba88a2015a9d8b0be7ca619
+      CodeUri: s3://pullreminders2/8942b8789ec2456fbaba39efb51306a5
       Handler: handlers.commands.lambda_handler
       Runtime: python3.7
       Events:
@@ -36,7 +36,7 @@ Resources:
   OauthCallbackFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: s3://pullreminders2/03e67e6d093cd6746cddc934a6009edc
+      CodeUri: s3://pullreminders2/1b09072a2b229fa4d2a87e7a69e9506c
       Handler: handlers.oauth_callback.lambda_handler
       Runtime: python3.7
       Events:
@@ -48,7 +48,7 @@ Resources:
   GithubWebhookFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: s3://pullreminders2/835c727fc7fe73831746a89fffcbceff
+      CodeUri: s3://pullreminders2/32807dc2d20dd0cc0225c377c66827ad
       Handler: handlers.github_webhook.lambda_handler
       Runtime: python3.7
       Events:
