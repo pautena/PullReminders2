@@ -208,7 +208,7 @@ class CreatedAction(BaseAction):
         }]
 
         message = f'{sender_name} repplied to you in [{repository["name"]}#{pull_request["number"]}] ' + \
-            f'<{pull_request["url"]}|{pull_request["title"]}>'
+            f'<{self.action["comment"]["html_url"]}|{pull_request["title"]}>'
         self.send_message(message,replied_profile['slack']['user_id'],attachments)
 
 
