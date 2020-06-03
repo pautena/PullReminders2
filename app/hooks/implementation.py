@@ -55,26 +55,23 @@ class ReviewRequestedAction(BaseAction,PullRequestable):
 
         return profile if profile is not None else self.action["pull_request"]["user"]
 
-    def get_requested_reviewers(self):
-        reviewers = []
-        for reviewer in self.action["pull_request"]["requested_reviewers"]:
-            profile = get_profile_by_id(reviewer["id"])
-            if profile:
-                reviewers.append(profile)
-        return reviewers
+    def get_requested_reviewer(self):
+        reviewer = self.action["requested_reviewer"]
+        return get_profile_by_id(reviewer["id"])
     
 
     def __call__(self):
         print("ReviewRequested")
         requested_by = self.requested_by()
         pull_request = self.get_pull_request()
-        for reviewer in self.get_requested_reviewers():
-            print(f"reviewer: ",reviewer)
+        reviewer = self.get_requested_reviewer()
+        print(f"reviewer: ",reviewer)
+        if reviewer:
             self.send_review_requested_message(reviewer,requested_by,pull_request)
         
     def send_review_requested_message(self,reviewer,requested_by,pull_request):
         user_id = reviewer["github"]["id"]
-        user = f"@{requested_by['user_name']}" if 'user_id' in requested_by else requested_by["user_name"]
+        user = f"<@{requested_by['user_id']}>" if 'user_id' in requested_by else requested_by["user_name"]
 
         message = f'{user} requested your review on [{pull_request["repo"]}#{pull_request["number"]}] ' + \
             f'<{pull_request["url"]}|{pull_request["title"]}>'
@@ -84,7 +81,8 @@ class ReviewRequestedAction(BaseAction,PullRequestable):
 
         if review_request_message is None:
             result = self.send_message(message,reviewer["slack"]["user_id"])
-            save_review_request_message(message,result["ts"],result["channel"],user_id,pull_request["id"])
+            if result:
+                save_review_request_message(message,result["ts"],result["channel"],user_id,pull_request["id"])
         else:
             update_message(message,review_request_message['ts'],review_request_message['channel'])
         
@@ -101,11 +99,12 @@ class ApprovedSubmitReviewAction(BaseAction,PullRequestable):
         review_request_message = get_review_request_message(user['id'],pull_request['id'])
         print("review_request_message: ",review_request_message)
 
-        update_message(
-            f'~{review_request_message["message"]}~',
-            review_request_message['ts'],
-            review_request_message['channel']
-        )
+        if review_request_message:
+            update_message(
+                f'~{review_request_message["message"]}~',
+                review_request_message['ts'],
+                review_request_message['channel']
+            )
 
 class RemoveApprovalSubmitReviewAction(BaseAction,PullRequestable):
 
@@ -192,10 +191,9 @@ class CreatedAction(BaseAction):
         sender_profile = get_profile_by_id(self.action["comment"]["user"]['id'])
 
 
-        replied_name = f'@{replied_profile["slack"]["user_name"]}'
         sender_name = self.action["comment"]["user"]['login']
         if sender_profile:
-            sender_name = f'@{sender_profile["slack"]["user_name"]}'
+            sender_name = f'<@{sender_profile["slack"]["user_id"]}>'
 
         if not replied_profile:
             return
@@ -205,10 +203,7 @@ class CreatedAction(BaseAction):
 
         repository = self.action["repository"]
         attachments = [{
-            "color": "#FF0000",
-            "text": f"{replied_name}: {replied_comment['body']}",
-        },{
-            "color": "#00FF00",
+            "color": "#355C7D",
             "text": f"{sender_name}: {self.action['comment']['body']}",
         }]
 

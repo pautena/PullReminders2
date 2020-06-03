@@ -9,7 +9,7 @@ def lambda_handler(event, context):
     print(f'event: {event["body"]}')
     body = json.loads(event["body"])
 
-    if body['action']:
+    if 'action' in body and body['action']:
         run_hook_action(body)
 
 

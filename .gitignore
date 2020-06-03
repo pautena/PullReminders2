@@ -245,3 +245,4 @@ $RECYCLE.BIN/
 
 app/environment
 .aws-sam/
+packaged.yaml
