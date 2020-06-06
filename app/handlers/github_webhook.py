@@ -4,6 +4,8 @@ from hooks import run_hook_action
 import sentry
 sentry.initialize()
 
+# pylint: disable=W0613,W0105
+
 
 def lambda_handler(event, context):
     print(f'event: {event["body"]}')
@@ -12,8 +14,7 @@ def lambda_handler(event, context):
     if 'action' in body and body['action']:
         run_hook_action(body)
 
-
     return {
         "statusCode": 200,
-        "body":'ok'
+        "body": 'ok'
     }

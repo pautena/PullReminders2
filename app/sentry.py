@@ -1,7 +1,7 @@
 import sentry_sdk
-import settings
 from sentry_sdk.integrations.aws_lambda import \
     AwsLambdaIntegration
+import settings
 
 
 def _get_integrations():

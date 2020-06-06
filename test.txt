@@ -1,0 +1,5 @@
+-r app/requirements.txt
+pylint
+mongomock
+pytest-mock
+autopep8

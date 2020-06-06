@@ -37,3 +37,4 @@ describe-stack:
 .PHONY: validate
 validate: validate
 	sam validate
+

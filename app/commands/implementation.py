@@ -1,26 +1,29 @@
 from oauth import get_oauth_login_url
 from repository import get_oauth_instance
 
+
 class BaseCommand:
-    def __init__(self,command):
-        self.command=command
-    
+    def __init__(self, command):
+        self.command = command
+
     def get_command_name(self):
         self.get_param('command')
 
     def get_args(self):
         self.get_param('args')
-    
-    def get_param(self,param):
-        return self.command.get(param,None)
-    
+
+    def get_param(self, param):
+        return self.command.get(param, None)
+
     def __call__(self):
         pass
+
 
 class NotFound(BaseCommand):
     def __call__(self):
         print("NotFound")
         return f"Command {self.get_command_name()} not found"
+
 
 class Authenticate(BaseCommand):
     def __call__(self):
@@ -34,9 +37,9 @@ class Authenticate(BaseCommand):
             self.get_param("team_domain")
         )
 
-        url=get_oauth_login_url(state)
+        url = get_oauth_login_url(state)
         return f'Click to this link {url} to authenticate'
-        
+
 
 class GetRepos(BaseCommand):
     def __call__(self):
@@ -45,13 +48,12 @@ class GetRepos(BaseCommand):
 
 
 COMMANDS = {
-    'auth':Authenticate,
-    'repos':GetRepos
+    'auth': Authenticate,
+    'repos': GetRepos
 }
+
 
 def get_command(command):
     if command in COMMANDS:
         return COMMANDS[command]
     return NotFound
-
-
