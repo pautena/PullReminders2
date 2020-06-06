@@ -4,8 +4,7 @@ from repository import get_profile_by_id, save_review_request_message, \
     get_review_request_message, save_comment, get_comment_by_id, \
     get_review_request_messages_by_pull_request
 from .behaviours import PullRequestable, Strikethroughable
-from .base import BaseAction
-
+from .base import BaseAction, get_user_display_name
 
 
 class ReviewRequestedAction(BaseAction, PullRequestable):
@@ -72,19 +71,38 @@ class ApprovedSubmitReviewAction(
         PullRequestable,
         Strikethroughable):
 
-    def get_user(self):
+    def get_reviewer_user(self):
         return self.action['review']['user']
+
+    def get_owner(self):
+        return self.action['pull_request']['user']
 
     def __call__(self):
         print("AprovedSubmitReview")
+        self.notify_reviewer_user()
+        self.notify_pull_request_owner()
+
+    def notify_reviewer_user(self):
         pull_request = self.get_pull_request()
-        user = self.get_user()
+        user = self.get_reviewer_user()
         review_request_message = get_review_request_message(
             user['id'], pull_request['id'])
         print("review_request_message: ", review_request_message)
 
         if review_request_message:
             self.strikethrough_review_request(review_request_message)
+
+    def notify_pull_request_owner(self):
+        owner = self.get_owner()
+        user = self.get_reviewer_user()
+        pull_request = self.get_pull_request()
+        owner_profile = get_profile_by_id(owner["id"])
+        user_profile = get_profile_by_id(user["id"])
+        user_name = get_user_display_name(user['login'], user_profile)
+        if owner_profile:
+            # pylint: disable=C0301
+            message = f'{user_name} approved [{pull_request["repo"]}#{pull_request["number"]}] <{pull_request["url"]}|{pull_request["title"]}>'
+            self.send_message(message, owner_profile['slack']['user_id'])
 
 
 class RemoveApprovalSubmitReviewAction(BaseAction, PullRequestable):
@@ -172,9 +190,8 @@ class CreatedAction(BaseAction):
         sender_profile = get_profile_by_id(
             self.action["comment"]["user"]['id'])
 
-        sender_name = self.action["comment"]["user"]['login']
-        if sender_profile:
-            sender_name = f'<@{sender_profile["slack"]["user_id"]}>'
+        sender_name = get_user_display_name(
+            self.action["comment"]["user"]['login'], sender_profile)
 
         if not replied_profile:
             return

@@ -14,6 +14,7 @@ class PullRequestable:
             'title': pull_request["title"]
         }
 
+
 class Strikethroughable:
     @staticmethod
     def strikethrough_review_request(message):

@@ -24,3 +24,7 @@ class NotFound(BaseAction):
     def __call__(self):
         print("NotFound")
         return f"Action {self.get_name()} not found"
+
+
+def get_user_display_name(name, profile):
+    return f'<@{profile["slack"]["user_id"]}>' if profile else name
