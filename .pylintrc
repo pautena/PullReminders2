@@ -6,3 +6,4 @@ disable=
     W0621, # redefined-outer-name
 
     R0801, # Similar lines
+    R0903, # Too few public methods

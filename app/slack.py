@@ -50,7 +50,6 @@ def send_message(message, user_id, attachments=[]):
 
 
 def update_message(message, timestamp, user_id):
-    print(f"update_message -> message: {message}, ts: {timestamp}")
 
     headers = {
         'Authorization': f'Bearer {settings.SLACK_BOT_ACCESS_TOKEN}',

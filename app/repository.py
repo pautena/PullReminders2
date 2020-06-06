@@ -112,6 +112,11 @@ def get_review_request_message(user_id, pull_request_id):
     return _get_review_requests_collection().find_one({'_id': item_id})
 
 
+def get_review_request_messages_by_pull_request(pull_request_id):
+    return _get_review_requests_collection().find(
+        {'pull_request': pull_request_id})
+
+
 def _get_comment_collection():
     return _get_db_client()[COMMENT_COLLECTION]
 

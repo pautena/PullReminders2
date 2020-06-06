@@ -1,47 +1,11 @@
 
+from slack import update_message
 from repository import get_profile_by_id, save_review_request_message, \
-    get_review_request_message, save_comment, get_comment_by_id
-from slack import send_message, update_message
+    get_review_request_message, save_comment, get_comment_by_id, \
+    get_review_request_messages_by_pull_request
+from .behaviours import PullRequestable, Strikethroughable
+from .base import BaseAction
 
-
-class BaseAction:
-    def __init__(self, action):
-        self.action = action
-
-    def get_name(self):
-        self.get_param('action')
-
-    def get_param(self, param):
-        return self.action.get(param, None)
-
-    def __call__(self):
-        pass
-
-    # pylint: disable=W0102,R0201
-    def send_message(self, message, user_id, attachments=[]):
-        return send_message(message, user_id, attachments=attachments)
-
-
-class NotFound(BaseAction):
-    def __call__(self):
-        print("NotFound")
-        return f"Action {self.get_name()} not found"
-
-# pylint: disable=R0903
-
-
-class PullRequestable:
-    action = {}
-
-    def get_pull_request(self):
-        pull_request = self.action["pull_request"]
-        return {
-            'id': pull_request['id'],
-            'url': pull_request['html_url'],
-            'repo': pull_request["base"]["repo"]["name"],
-            'number': pull_request["number"],
-            'title': pull_request["title"]
-        }
 
 
 class ReviewRequestedAction(BaseAction, PullRequestable):
@@ -82,8 +46,7 @@ class ReviewRequestedAction(BaseAction, PullRequestable):
         user = f"<@{requested_by['user_id']}>" if 'user_id' in requested_by else requested_by["user_name"]
 
         # pylint: disable=C0301
-        message = f'{user} requested your review on [{pull_request["repo"]}#{pull_request["number"]}] ' + \
-            f'<{pull_request["url"]}|{pull_request["title"]}>'
+        message = f'{user} requested your review on [{pull_request["repo"]}#{pull_request["number"]}] <{pull_request["url"]}|{pull_request["title"]}>'
 
         review_request_message = get_review_request_message(
             user_id, pull_request['id'])
@@ -104,7 +67,10 @@ class ReviewRequestedAction(BaseAction, PullRequestable):
                 review_request_message['channel'])
 
 
-class ApprovedSubmitReviewAction(BaseAction, PullRequestable):
+class ApprovedSubmitReviewAction(
+        BaseAction,
+        PullRequestable,
+        Strikethroughable):
 
     def get_user(self):
         return self.action['review']['user']
@@ -118,11 +84,7 @@ class ApprovedSubmitReviewAction(BaseAction, PullRequestable):
         print("review_request_message: ", review_request_message)
 
         if review_request_message:
-            update_message(
-                f'~{review_request_message["message"]}~',
-                review_request_message['ts'],
-                review_request_message['channel']
-            )
+            self.strikethrough_review_request(review_request_message)
 
 
 class RemoveApprovalSubmitReviewAction(BaseAction, PullRequestable):
@@ -236,14 +198,23 @@ class CreatedAction(BaseAction):
             attachments)
 
 
-ACTIONS = {
-    'review_requested': ReviewRequestedAction,
-    'submitted': SubmitReviewAction,
-    'created': CreatedAction
-}
+class ClosedAction(BaseAction, PullRequestable, Strikethroughable):
 
+    def __call__(self):
+        print("ClosedAction")
 
-def get_action(action):
-    if action in ACTIONS:
-        return ACTIONS[action]
-    return NotFound
+        review_requests = self.get_pull_request_review_requests()
+
+        for review_request in review_requests:
+            self.notify_close(review_request)
+
+    def get_pull_request_review_requests(self):
+        return get_review_request_messages_by_pull_request(
+            self.get_pull_request()["id"])
+
+    def notify_close(self, review_request):
+        profile = get_profile_by_id(review_request['user'])
+        print("review_request: ", review_request, ", profile: ", profile)
+
+        if profile:
+            self.strikethrough_review_request(review_request)
