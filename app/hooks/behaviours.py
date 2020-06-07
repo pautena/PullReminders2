@@ -15,6 +15,13 @@ class PullRequestable:
         }
 
 
+class Ownerable:
+    action = {}
+
+    def get_owner(self):
+        return self.action['pull_request']['user']
+
+
 class Strikethroughable:
     @staticmethod
     def strikethrough_review_request(message):

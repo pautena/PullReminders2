@@ -3,7 +3,8 @@ from slack import update_message
 from repository import get_profile_by_id, save_review_request_message, \
     get_review_request_message, save_comment, get_comment_by_id, \
     get_review_request_messages_by_pull_request
-from .behaviours import PullRequestable, Strikethroughable
+import settings
+from .behaviours import PullRequestable, Strikethroughable, Ownerable
 from .base import BaseAction, get_user_display_name
 
 
@@ -69,13 +70,11 @@ class ReviewRequestedAction(BaseAction, PullRequestable):
 class ApprovedSubmitReviewAction(
         BaseAction,
         PullRequestable,
-        Strikethroughable):
+        Strikethroughable,
+        Ownerable):
 
     def get_reviewer_user(self):
         return self.action['review']['user']
-
-    def get_owner(self):
-        return self.action['pull_request']['user']
 
     def __call__(self):
         print("AprovedSubmitReview")
@@ -131,8 +130,33 @@ class ChangesRequestedSubmitReviewAction(RemoveApprovalSubmitReviewAction):
     pass
 
 
-class CommentedSubmitReviewAction(BaseAction):
-    pass
+class CommentedSubmitReviewAction(BaseAction, PullRequestable, Ownerable):
+    def __call__(self):
+        print("CommentedSubmitReviewAction")
+        self._notify_pull_request_owner()
+
+    def get_reviewer_user(self):
+        return self.action['review']['user']
+
+    def _notify_pull_request_owner(self):
+        owner = self.get_owner()
+        user = self.get_reviewer_user()
+        pull_request = self.get_pull_request()
+        owner_profile = get_profile_by_id(owner["id"])
+        user_profile = get_profile_by_id(user["id"])
+        user_name = get_user_display_name(user['login'], user_profile)
+        if owner_profile:
+            # pylint: disable=C0301
+            message = f'{user_name} commented on [{pull_request["repo"]}#{pull_request["number"]}] <{self.action["review"]["html_url"]}|{pull_request["title"]}>'
+
+            attachments = [{
+                "color": "#355C7D",
+                "text": f"{user_name}: {self.action['review']['body']}",
+            }]
+            self.send_message(
+                message,
+                owner_profile['slack']['user_id'],
+                attachments=attachments)
 
 
 class SubmitReviewAction(BaseAction):
@@ -153,13 +177,13 @@ class SubmitReviewAction(BaseAction):
         return None
 
 
-class CreatedAction(BaseAction):
-    def __call__(self):
-        print("CreatedAction")
-
-        if 'comment' in self.action:
-            self._process_comment()
-            self._process_repply()
+class CreatedActionReview(BaseAction):
+    def get_pull_request(self):
+        if 'pull_request' in self.action:
+            return self.action["pull_request"]
+        if 'issue' in self.action:
+            return self.action["issue"]
+        return None
 
     def _process_comment(self):
         comment = self.action["comment"]
@@ -169,7 +193,7 @@ class CreatedAction(BaseAction):
             comment["body"],
             comment["user"]["id"],
             comment["user"]["login"],
-            self.action["pull_request"]["id"],
+            self.get_pull_request()["id"],
         )
 
     def _process_repply(self):
@@ -213,6 +237,65 @@ class CreatedAction(BaseAction):
             message,
             replied_profile['slack']['user_id'],
             attachments)
+
+
+class CreatedActionIssue(BaseAction):
+    def get_issue_pull_request(self):
+        return self.action['issue']
+
+    def get_issue_owner(self):
+        return self.get_issue_pull_request()['user']
+
+    def get_issue_repo(self):
+        return self.action['repository']
+
+    def get_issue_comment_user(self):
+        return self.action['comment']['user']
+
+    @staticmethod
+    def _is_valid_user(user):
+
+        for ban_user in settings.BAN_USERS:
+            if user["login"] in ban_user:
+                return False
+        return True
+
+    def _process_issue_comment(self):
+        owner = self.get_issue_owner()
+        print("owner: ", owner)
+
+        if not self._is_valid_user(owner):
+            return
+
+        user = self.get_issue_comment_user()
+        pull_request = self.get_issue_pull_request()
+        owner_profile = get_profile_by_id(owner["id"])
+        user_profile = get_profile_by_id(user["id"])
+        repo = self.get_issue_repo()
+        user_name = get_user_display_name(user['login'], user_profile)
+        if owner_profile:
+            # pylint: disable=C0301
+            message = f'{user_name} commented on [{repo["name"]}#{pull_request["number"]}] <{self.action["comment"]["html_url"]}|{pull_request["title"]}>'
+
+            attachments = [{
+                "color": "#355C7D",
+                "text": f"{user_name}: {self.action['comment']['body']}",
+            }]
+            self.send_message(
+                message,
+                owner_profile['slack']['user_id'],
+                attachments=attachments)
+
+
+class CreatedAction(CreatedActionReview, CreatedActionIssue):
+    def __call__(self):
+        print("CreatedAction")
+
+        if 'comment' in self.action and 'pull_request' in self.action:
+            self._process_comment()
+            self._process_repply()
+        elif 'comment' in self.action and 'issue' in self.action:
+            self._process_issue_comment()
 
 
 class ClosedAction(BaseAction, PullRequestable, Strikethroughable):

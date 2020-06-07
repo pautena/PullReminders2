@@ -18,3 +18,4 @@ SLACK_BOT_ACCESS_TOKEN = os.getenv("SLACK_BOT_ACCESS_TOKEN")
 DATABASE = os.getenv("DATABASE")
 DATABASE_URL = os.getenv("DATABASE_URL")
 SENTRY_DSN = os.getenv("SENTRY_DSN")
+BAN_USERS = ['codecov', 'dependabot']
