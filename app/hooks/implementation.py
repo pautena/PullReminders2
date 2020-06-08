@@ -3,7 +3,6 @@ from slack import update_message
 from repository import get_profile_by_id, save_review_request_message, \
     get_review_request_message, save_comment, get_comment_by_id, \
     get_review_request_messages_by_pull_request
-import settings
 from .behaviours import PullRequestable, Strikethroughable, Ownerable
 from .base import BaseAction, get_user_display_name
 
@@ -254,20 +253,17 @@ class CreatedActionIssue(BaseAction):
 
     @staticmethod
     def _is_valid_user(user):
-
-        for ban_user in settings.BAN_USERS:
-            if user["login"] in ban_user:
-                return False
-        return True
+        return user['type'] != 'Bot'
 
     def _process_issue_comment(self):
         owner = self.get_issue_owner()
         print("owner: ", owner)
 
-        if not self._is_valid_user(owner):
+        user = self.get_issue_comment_user()
+
+        if not self._is_valid_user(user):
             return
 
-        user = self.get_issue_comment_user()
         pull_request = self.get_issue_pull_request()
         owner_profile = get_profile_by_id(owner["id"])
         user_profile = get_profile_by_id(user["id"])

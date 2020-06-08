@@ -41,6 +41,14 @@ def issue_comment_event():
         }
 
 
+@pytest.fixture()
+def issue_bot_comment_event():
+    with open('tests/fixtures/hook_issue_comment_bot.json', 'r') as file:
+        return {
+            'body': json.dumps(json.loads(file.read()))
+        }
+
+
 def test_hook_create_comment_request(create_comment_event, mocker):
     review_requests_collection = mongomock.MongoClient().db.collection
 
@@ -448,3 +456,71 @@ def test_hook_issue_comment_request(issue_comment_event, mocker):
             'Authorization': f'Bearer asdfasdfae3fasfas',
             "Content-Type": "application/json"}
     )
+
+
+def test_hook_issue_comment_by_bot_request(issue_bot_comment_event, mocker):
+    review_requests_collection = mongomock.MongoClient().db.collection
+
+    mocker.patch(
+        'repository._get_review_requests_collection',
+        return_value=review_requests_collection)
+
+    user_collection = mongomock.MongoClient().db.collection
+
+    user_collection.insert_many([{
+        "_id": 1234,
+        "slack": {
+            "user_id": "user1ID",
+            "user_name": "user1",
+            "response_url": "https://hooks.slack.com/commands/asdfasdf/asfasdf/qweqf",
+            "team_domain": "test"
+        },
+        "github": {
+            "id": 1234,
+            "user_name": "user1",
+            "name": "User 1 Name",
+            "access_token": "ahtawtewerg",
+            "refresh_token": "anshttsetges"
+        }
+    }, {
+        "_id": 9876,
+        "slack": {
+            "user_id": "user2ID",
+            "user_name": "user2",
+            "response_url": "https://hooks.slack.com/commands/asdfasdf/asfasdf/qweqf",
+            "team_domain": "test"
+        },
+        "github": {
+            "id": 9876,
+            "user_name": "user2",
+            "name": "User 2 Name",
+            "access_token": "ahtawtewerg",
+            "refresh_token": "anshttsetges"
+        }
+    }])
+
+    mocker.patch(
+        'repository._get_users_collection',
+        return_value=user_collection)
+
+    comment_collection = mongomock.MongoClient().db.collection
+
+    mocker.patch(
+        'repository._get_comment_collection',
+        return_value=comment_collection)
+
+    slack_response = {
+        'ts': '111111',
+        'channel': 'faf3as'
+    }
+    mock_post = mocker.patch('requests.post', return_value=MockResponse(
+        200, json.dumps(slack_response)))
+
+    ret = github_webhook.lambda_handler(issue_bot_comment_event, "")
+
+    assert ret["statusCode"] == 200
+    assert ret["body"] == 'ok'
+
+    assert comment_collection.count_documents({}) == 0
+
+    mock_post.not_called()
