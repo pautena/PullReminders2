@@ -257,19 +257,24 @@ class CreatedActionIssue(BaseAction):
 
     def _process_issue_comment(self):
         owner = self.get_issue_owner()
-        print("owner: ", owner)
 
         user = self.get_issue_comment_user()
 
         if not self._is_valid_user(user):
             return
 
+        if owner['login'] == user['login']:
+            return
+
         pull_request = self.get_issue_pull_request()
         owner_profile = get_profile_by_id(owner["id"])
         user_profile = get_profile_by_id(user["id"])
+
         repo = self.get_issue_repo()
         user_name = get_user_display_name(user['login'], user_profile)
+
         if owner_profile:
+
             # pylint: disable=C0301
             message = f'{user_name} commented on [{repo["name"]}#{pull_request["number"]}] <{self.action["comment"]["html_url"]}|{pull_request["title"]}>'
 
