@@ -16,6 +16,7 @@ def comment_event():
 
 
 def test_comment_revision_request(comment_event, mocker):
+
     review_requests_collection = mongomock.MongoClient().db.collection
 
     review_requests_collection.insert_one({

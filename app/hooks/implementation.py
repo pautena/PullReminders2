@@ -140,6 +140,10 @@ class CommentedSubmitReviewAction(BaseAction, PullRequestable, Ownerable):
     def _notify_pull_request_owner(self):
         owner = self.get_owner()
         user = self.get_reviewer_user()
+
+        if owner['id'] == user['id']:
+            return
+
         pull_request = self.get_pull_request()
         owner_profile = get_profile_by_id(owner["id"])
         user_profile = get_profile_by_id(user["id"])
