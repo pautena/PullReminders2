@@ -1,0 +1,29 @@
+{
+  "action": "created",
+  "comment": {
+    "pull_request_review_id": 421442198,
+    "id": 432885618,
+    "user": {
+      "login": "user2",
+      "id": 5763345,
+      "type": "User"
+    },
+    "body": "aas",
+    "html_url": "https://github.com/user1/testrepo/pull/2#xxx",
+    "in_reply_to_id": 9282348923
+  },
+  "pull_request": {
+    "id": 425445400,
+    "number": 2,
+    "title": "WIP",
+    "body": "",
+    "base": {
+      "repo": {
+        "name": "testrepo"
+      } 
+    }
+  },
+  "repository": {
+    "name": "testrepo"
+  }
+}

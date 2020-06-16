@@ -1,0 +1,21 @@
+{
+  "action": "closed",
+  "number": 6,
+  "pull_request": {
+    "id": 123412,
+    "html_url": "https://github.com/user1/testpullreminders2/pull/6",
+    "number": 6,
+    "title": "Test3",
+    "user": {
+      "login": "user1",
+      "id": 63456
+    },
+    "base":{
+      "repo":{
+         "name":"testrepo"          
+         
+      }
+   }
+  }
+}
+    

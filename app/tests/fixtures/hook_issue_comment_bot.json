@@ -1,0 +1,11 @@
+
+{
+  "action": "created",
+  "comment": {
+    "user": {
+      "login": "codecov[bot]",
+      "id": 2345234,
+      "type": "Bot"
+    }
+  }
+}

@@ -203,7 +203,7 @@ def test_hook_create_comment_request_with_repply(repply_comment_event, mocker):
             {
                 'channel': 'faf3as',
                 # pylint: disable=C0301
-                'text': 'user2 repplied to you in [testrepo#2] <https://github.com/user1/testrepo/pull/2#discussion_r432885618|WIP>',
+                'text': 'user2 repplied to you in [testrepo#2] <https://github.com/user1/testrepo/pull/2#xxx|WIP>',
                 "unfurl_links": False,
                 "unfurl_media": False,
                 "attachments": [{
@@ -303,7 +303,7 @@ def test_hook_create_comment_request_with_repply_and_existing_repplier(
             {
                 'channel': 'user1ID',
                 # pylint: disable=C0301
-                'text': '<@user2ID> repplied to you in [testrepo#2] <https://github.com/user1/testrepo/pull/2#discussion_r432885618|WIP>',
+                'text': '<@user2ID> repplied to you in [testrepo#2] <https://github.com/user1/testrepo/pull/2#xxx|WIP>',
                 "unfurl_links": False,
                 "unfurl_media": False,
                 "attachments": [{

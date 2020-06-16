@@ -1,0 +1,25 @@
+{
+  "action": "submitted",
+  "review": {
+    "id": 426884378,
+    "user": {
+      "login": "user1",
+      "id": 1234
+    },
+    "state": "commented",
+    "body": null
+  },
+  "pull_request": {
+    "id": 12341234,
+    "title": "Template",
+    "user": {
+      "login": "user1",
+      "id": 1234,
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/user1",
+      "html_url": "https://github.com/user1",
+      "type": "User"
+    },
+    "body": "Desc"
+  }
+}

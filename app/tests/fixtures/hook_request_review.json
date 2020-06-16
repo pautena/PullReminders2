@@ -1,0 +1,29 @@
+{
+  "action":"review_requested",
+  "number":2,
+  "pull_request":{
+     "id":425445400,
+     "html_url":"https://github.com/user1/testrepo/pull/2",
+     "number":2,
+     "title":"WIP",
+     "user":{
+        "login":"user2",
+        "id":5763345,
+        "type":"User"
+     },
+     "body":"",
+     "base":{
+        "repo":{
+           "name":"testrepo"
+        }
+     }
+  },
+  "requested_reviewer":{
+     "login":"user1",
+     "id":3452345,
+     "type":"User"
+  },
+  "repository":{
+     "name":"testrepo"     
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "action":"submitted",
+  "review":{
+     "id":2345,
+     "user":{
+        "login":"user1",
+        "id":3452345
+     },
+     "body":"lorem ipsum",
+     "state":"changes_requested"
+  },
+  "pull_request":{
+     "id":425445400,
+     "html_url":"https://github.com/user1/testrepo/pull/2",
+     "number":2,
+     "title":"WIP",
+     "user":{
+        "login":"user2",
+        "id":5763345,
+        "type":"User"
+     },
+     "body":"",
+     "milestone":"None",
+     "base":{
+        "repo":{
+           "name":"testrepo"
+        }
+     }
+  },
+  "repository":{
+     "name":"testrepo"    
+  }
+}
