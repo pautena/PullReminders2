@@ -125,16 +125,14 @@ def _get_comment_id(pull_request_id, comment_id):
     return f'{pull_request_id}:{comment_id}'
 
 
-def save_comment(comment_id, body, user_id, user_name, pull_request_id):
+def save_comment(comment_id, user_id, pull_request_id):
     collection = _get_comment_collection()
 
     item_id = _get_comment_id(pull_request_id, comment_id)
     item = {
         '_id': item_id,
         'comment_id': comment_id,
-        'body': body,
         'user_id': user_id,
-        'user_name': user_name,
         'pull_request': pull_request_id
     }
     result = collection.replace_one({'_id': item_id}, item, upsert=True)
@@ -144,3 +142,7 @@ def save_comment(comment_id, body, user_id, user_name, pull_request_id):
 def get_comment_by_id(pull_request_id, comment_id):
     item_id = _get_comment_id(pull_request_id, comment_id)
     return _get_comment_collection().find_one({'_id': item_id})
+
+def clean_pull_request_data(pull_request_id):
+    _get_review_requests_collection().delete_many({'pull_request': pull_request_id})
+    _get_comment_collection().delete_many({'pull_request': pull_request_id})

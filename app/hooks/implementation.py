@@ -2,7 +2,7 @@
 from slack import update_message
 from repository import get_profile_by_id, save_review_request_message, \
     get_review_request_message, save_comment, get_comment_by_id, \
-    get_review_request_messages_by_pull_request
+    get_review_request_messages_by_pull_request, clean_pull_request_data
 from .behaviours import PullRequestable, Strikethroughable, Ownerable
 from .base import BaseAction, get_user_display_name
 
@@ -138,6 +138,10 @@ class CommentedSubmitReviewAction(BaseAction, PullRequestable, Ownerable):
         return self.action['review']['user']
 
     def _notify_pull_request_owner(self):
+
+        if not self.action['review']['body']:
+            return
+
         owner = self.get_owner()
         user = self.get_reviewer_user()
 
@@ -193,9 +197,7 @@ class CreatedActionReview(BaseAction):
 
         save_comment(
             comment["id"],
-            comment["body"],
             comment["user"]["id"],
-            comment["user"]["login"],
             self.get_pull_request()["id"],
         )
 
@@ -312,6 +314,8 @@ class ClosedAction(BaseAction, PullRequestable, Strikethroughable):
 
         for review_request in review_requests:
             self.notify_close(review_request)
+        
+        clean_pull_request_data(self.get_pull_request()['id'])
 
     def get_pull_request_review_requests(self):
         return get_review_request_messages_by_pull_request(

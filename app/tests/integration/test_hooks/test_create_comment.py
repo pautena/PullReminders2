@@ -34,6 +34,14 @@ def submit_comment_event():
 
 
 @pytest.fixture()
+def submit_comment_body_null_event():
+    with open('tests/fixtures/hook_submit_comment_body_null.json', 'r') as file:
+        return {
+            'body': json.dumps(json.loads(file.read()))
+        }
+
+
+@pytest.fixture()
 def submit_comment_owner_event():
     with open('tests/fixtures/hook_submit_comment_owner.json', 'r') as file:
         return {
@@ -120,9 +128,7 @@ def test_hook_create_comment_request(create_comment_event, mocker):
     assert cursor[0] == {
         '_id': '425445400:432885618',
         'comment_id': 432885618,
-        'body': 'aas',
         'user_id': 5763345,
-        'user_name': 'user2',
         'pull_request': 425445400
     }
 
@@ -162,9 +168,7 @@ def test_hook_create_comment_request_with_repply(repply_comment_event, mocker):
     comment_collection.insert_one({
         '_id': '425445400:9282348923',
         'comment_id': 9282348923,
-        'body': 'original message',
         'user_id': 123433,
-        'user_name': 'user1',
         'pull_request': 425445400
     })
 
@@ -190,9 +194,7 @@ def test_hook_create_comment_request_with_repply(repply_comment_event, mocker):
     assert cursor[1] == {
         '_id': '425445400:432885618',
         'comment_id': 432885618,
-        'body': 'aas',
         'user_id': 5763345,
-        'user_name': 'user2',
         'pull_request': 425445400
     }
     mock_post.assert_called_with(
@@ -266,9 +268,7 @@ def test_hook_create_comment_request_with_repply_and_existing_repplier(
     comment_collection.insert_one({
         '_id': '425445400:9282348923',
         'comment_id': 9282348923,
-        'body': 'original message',
         'user_id': 123433,
-        'user_name': 'user1',
         'pull_request': 425445400
     })
 
@@ -294,9 +294,7 @@ def test_hook_create_comment_request_with_repply_and_existing_repplier(
     assert cursor[1] == {
         '_id': '425445400:432885618',
         'comment_id': 432885618,
-        'body': 'aas',
         'user_id': 5763345,
-        'user_name': 'user2',
         'pull_request': 425445400
     }
     mock_post.assert_called_with(
@@ -403,6 +401,73 @@ def test_hook_submit_comment_request(submit_comment_event, mocker):
             "Content-Type": "application/json"
         }
     )
+
+def test_hook_submit_comment_body_null_request(submit_comment_body_null_event, mocker):
+    review_requests_collection = mongomock.MongoClient().db.collection
+
+    mocker.patch(
+        'repository._get_review_requests_collection',
+        return_value=review_requests_collection)
+
+    user_collection = mongomock.MongoClient().db.collection
+
+    user_collection.insert_many([{
+        "_id": 1234,
+        "slack": {
+            "user_id": "user1ID",
+            "user_name": "user1",
+            "response_url": "https://hooks.slack.com/commands/asdfasdf/asfasdf/qweqf",
+            "team_domain": "test"
+        },
+        "github": {
+            "id": 1234,
+            "user_name": "user1",
+            "name": "User 1 Name",
+            "access_token": "ahtawtewerg",
+            "refresh_token": "anshttsetges"
+        }
+    }, {
+        "_id": 9876,
+        "slack": {
+            "user_id": "user2ID",
+            "user_name": "user2",
+            "response_url": "https://hooks.slack.com/commands/asdfasdf/asfasdf/qweqf",
+            "team_domain": "test"
+        },
+        "github": {
+            "id": 9876,
+            "user_name": "user2",
+            "name": "User 2 Name",
+            "access_token": "ahtawtewerg",
+            "refresh_token": "anshttsetges"
+        }
+    }])
+
+    mocker.patch(
+        'repository._get_users_collection',
+        return_value=user_collection)
+
+    comment_collection = mongomock.MongoClient().db.collection
+
+    mocker.patch(
+        'repository._get_comment_collection',
+        return_value=comment_collection)
+
+    slack_response = {
+        'ts': '111111',
+        'channel': 'faf3as'
+    }
+    mock_post = mocker.patch('requests.post', return_value=MockResponse(
+        200, json.dumps(slack_response)))
+
+    ret = github_webhook.lambda_handler(submit_comment_body_null_event, "")
+
+    assert ret["statusCode"] == 200
+    assert ret["body"] == 'ok'
+
+    assert comment_collection.count_documents({}) == 0
+
+    mock_post.assert_not_called()
 
 
 def test_hook_submit_comment_owner_request(submit_comment_owner_event, mocker):

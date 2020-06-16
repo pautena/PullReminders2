@@ -41,7 +41,14 @@ def test_close_pr(close_event, mocker):
         'message': 'user5 requested your review on [testrepo#2]',
         'user': 412341234,
         'pull_request': 123412
-    }, ])
+    },{
+        '_id': '52345234:235234523',
+        'ts': '22222',
+        'channel': 'chUser2',
+        'message': 'user5 requested your review on [testrepo#5]',
+        'user': 235234523,
+        'pull_request': 52345234
+    } ])
 
     mocker.patch(
         'repository._get_review_requests_collection',
@@ -85,6 +92,28 @@ def test_close_pr(close_event, mocker):
         'repository._get_users_collection',
         return_value=user_collection)
 
+    comments_collection = mongomock.MongoClient().db.collection
+    comments_collection.insert_many([{
+        '_id':'1234:123412',
+        'comment_id': 1234,
+        'user_id': 1234,
+        'pull_request': 123412
+    },{
+        '_id':'9876:123412',
+        'comment_id': 9876,
+        'user_id': 1234,
+        'pull_request': 123412
+    },{
+        '_id':'34563:1412',
+        'comment_id': 34563,
+        'user_id': 1234,
+        'pull_request': 1412
+    }])
+
+    mocker.patch(
+        'repository._get_comment_collection',
+        return_value=comments_collection)
+
     slack_response = {
         'ts': '111111',
         'channel': 'faf3as'
@@ -121,3 +150,7 @@ def test_close_pr(close_event, mocker):
 
     assert mock_post.call_count == 2
     mock_post.assert_has_calls([call1, call2])
+
+
+    assert review_requests_collection.count_documents({}) == 1
+    assert comments_collection.count_documents({}) == 1
